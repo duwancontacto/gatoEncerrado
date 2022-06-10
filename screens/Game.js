@@ -9,64 +9,40 @@ import {
   SafeAreaView,
   Image,
 } from "react-native";
+import {
+  calculatePosibilities,
+  calculateWin,
+  calculateBestPosibility,
+} from "../utils/calculateGames.js";
 import myFunc from "../numerosaleatorios.js";
 
 export default function App() {
   const [casilla, setCasilla] = useState(myFunc());
   const [positionCat, setPositionCat] = useState(45);
+  const [catWin, setCatWin] = useState(false);
 
   const [lastCasillaUpdated, setLastCasillaUpdated] = useState(null);
 
   const handleActualiza = (uid) => {
-    if (uid === positionCat || uid === lastCasillaUpdated) return;
+    let filterCasilla = casilla.find(
+      (user) => user.id === uid && user.light === 1
+    );
+
+    if (uid === positionCat || filterCasilla || catWin) return;
+    else if (calculateWin(positionCat)) return setCatWin(true);
 
     setLastCasillaUpdated(uid);
+
     const Newcasilla = casilla.map((user) =>
       user.id === uid ? {...user, light: 1} : user
     );
     setCasilla(Newcasilla);
   };
 
-  const getPosibilities = () => {
-    let tempPosibility = [];
-
-    if ((positionCat - 11 / 10).toString().split(".")[0] === "1")
-      tempPosibility.push(positionCat - 11);
-
-    if (positionCat - 10 > 10) tempPosibility.push(positionCat - 10);
-
-    if (!(positionCat - 9 / 10).toString().split(".")[0])
-      tempPosibility.push(positionCat - 9);
-
-    if ((positionCat - 1 / 10).toString().split(".")[0] === "1")
-      tempPosibility.push(positionCat - 1);
-
-    if (!(positionCat + 1 / 10).toString().split(".")[0])
-      tempPosibility.push(positionCat + 1);
-
-    if ((positionCat + 9 / 10).toString().split(".")[0] === "1")
-      tempPosibility.push(positionCat + 9);
-
-    if (positionCat + 10 < 90) tempPosibility.push(positionCat + 10);
-
-    if (!(positionCat + 11 / 10).toString().split(".")[0])
-      tempPosibility.push(positionCat + 11);
-
-    return tempPosibility;
-  };
-
   useEffect(() => {
     if (lastCasillaUpdated) {
-      let posibilities = getPosibilities();
-      let newPosition =
-        posibilities[Math.floor(Math.random() * posibilities.length)];
-
-      let validatePosition = casilla.find(
-        (user) => user.id === newPosition && user.light === 1
-      );
-
-      console.log("test", validatePosition);
-      if (!validatePosition) setPositionCat(newPosition);
+      let posibilities = calculatePosibilities(positionCat, casilla); //Calculate posibilities
+      setPositionCat(calculateBestPosibility(positionCat, posibilities)); //Set best posibility
     }
   }, [casilla]);
 
@@ -134,7 +110,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   hexagon: {
-    width: 40,
+    width: "10%",
     height: 40,
     position: "relative",
   },
